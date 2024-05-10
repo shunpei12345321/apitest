@@ -67,7 +67,7 @@ export default async function Home() {
                 </div>
               </div>
               <h2 className="text-sm border-b-2">
-                {formatDate(new Date(blog.updatedAt))}
+                
               </h2>
 
               <div className="p-4">{blog.content}</div>
