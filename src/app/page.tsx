@@ -3,15 +3,28 @@
 import { useState } from 'react';
 import { getIDmStr } from "@/app/lib/nfc/rcs300.mjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [id, setId] = useState<string | undefined>(undefined); // 入力された文字列を格納する状態変数
+  const [user, setUser] = useState<any[]>([]);
 
   // input 要素の値が変更されたときに呼び出される関数
   const handleInputChange = ( event:any ) => {
     setId(event.target.value); // 入力された文字列を id 状態に更新
   };
   
+  const fetchuser = async (idm:any) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/ticket/${idm}`);
+      const data = await res.json();
+      setUser(data.user); 
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
+
   const handleClick = async () => {
     try {
       await getIDmStr(navigator).then((id) => {
@@ -23,6 +36,8 @@ export default function Home() {
       console.error(e);
     }
   };
+
+  
 
   return (
     <main>
@@ -52,5 +67,22 @@ export default function Home() {
         <p className="pt-5">{id && `IDm: ${id}`}</p>
       </div>
     </div>
+      <div className="flex flex-col justify-center items-center">
+        <h1 className="text-4xl">Check User</h1>
+        <div>
+          {user.length > 0 ? (
+            user.map((user, index) => (
+              <div key={index}>
+                <h1>Ticket Details</h1>
+                <p>Name: {user.name}</p>
+                <p>Email: {user.email}</p>
+              </div>
+            ))
+          ) : (
+            <p>Loading...</p>
+          )}
+        </div>
+      </div>
+    </main>
   );
 }
