@@ -51,6 +51,6 @@ export default function Home() {
         </button>
         <p className="pt-5">{id && `IDm: ${id}`}</p>
       </div>
-    </main>
+    </div>
   );
 }
