@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getIDmStr } from "@/app/lib/nfc/rcs300.mjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,30 +14,44 @@ export default function Home() {
   const handleInputChange = ( event:any ) => {
     setId(event.target.value); // 入力された文字列を id 状態に更新
   };
-  
-  const fetchuser = async (idm:any) => {
-    try {
-      const res = await fetch(`http://localhost:3000/api/ticket/${idm}`);
-      const data = await res.json();
-      setUser(data.user); 
-    } catch (error) {
-      console.error('Error fetching user:', error);
-    }
-  };
 
   const handleClick = async () => {
     try {
       await getIDmStr(navigator).then((id) => {
         console.log("getIDmStr: " + id);
         const trimmedId = id?.replace(/\s/g, ''); // 空白を削除
+        if(trimmedId){
         setId(trimmedId);
+        }else{
+        setId("");
+        setUser([]);
+        }
       });
     } catch (e) {
       console.error(e);
     }
   };
 
-  
+   // user が変更されるたびに fetchuser を呼び出す
+   useEffect(() => { 
+    const fetchuser = async () => {
+      try {
+        const res = await fetch(`/api/ticket/${ id }`);
+        const data = await res.json();
+        console.log(data.ticket);
+        if (data.ticket) {
+          setUser(data.ticket);
+        } else {
+          console.log('No user found.');
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    if (id) {
+      fetchuser();
+    }
+  }, [id]);
 
   return (
     <main>
@@ -70,16 +84,16 @@ export default function Home() {
       <div className="flex flex-col justify-center items-center">
         <h1 className="text-4xl">Check User</h1>
         <div>
-          {user.length > 0 ? (
-            user.map((user, index) => (
+          {user && user.length > 0 ? (
+            user.map((userData, index) => (
               <div key={index}>
                 <h1>Ticket Details</h1>
-                <p>Name: {user.name}</p>
-                <p>Email: {user.email}</p>
+                <p>Name: {userData.name}</p>
+                <p>Email: {userData.email}</p>
               </div>
             ))
           ) : (
-            <p>Loading...</p>
+            <p>No user found.</p>
           )}
         </div>
       </div>

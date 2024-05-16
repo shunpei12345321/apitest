@@ -14,6 +14,7 @@ export default function Home({ idm }:any) {
       try {
         const res = await fetch(`/api/ticket/${pageId}`);
         const data = await res.json();
+        console.log(data.ticket);
         setTicket(data.ticket); // サーバーからのレスポンスには ticket が含まれています
       } catch (error) {
         console.error('Error fetching ticket:', error);
