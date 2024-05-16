@@ -80,7 +80,6 @@ export default function Home() {
         </button>
         <p className="pt-5">{id && `IDm: ${id}`}</p>
       </div>
-    </div>
       <div className="flex flex-col justify-center items-center">
         <h1 className="text-4xl">Check User</h1>
         <div>
