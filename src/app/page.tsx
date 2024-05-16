@@ -1,78 +1,99 @@
-"use client";
+"use client"
 
+import { useEffect, useState } from 'react';
+import { getIDmStr } from "@/app/lib/nfc/rcs300.mjs";
 import Link from "next/link";
-import { BlogType } from "./types";
+import { useRouter } from "next/navigation";
 
+export default function Home() {
+  const router = useRouter();
+  const [id, setId] = useState<string | undefined>(undefined); // 入力された文字列を格納する状態変数
+  const [user, setUser] = useState<any[]>([]);
 
-async function fetchAllBlogs() {
-  const res = await fetch("http://localhost:3000/api/blog", {
-    cache: "no-store", //SSR
-  });
-  const data = await res.json();
-  //console.log(data);
-  return data.blogs;
-}
-
-export default async function Home() {
-  const blogs = await fetchAllBlogs();
-
-  // Delete Blog
-  const handleDelete = async (blog: BlogType) => {
-    const response = await fetch(`/api/blog/${blog.id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      console.error("Failed to delete");
-      return;
-    }
-    location.reload();
+  // input 要素の値が変更されたときに呼び出される関数
+  const handleInputChange = ( event:any ) => {
+    setId(event.target.value); // 入力された文字列を id 状態に更新
   };
 
-  return (
-    <div>
-      {/* Body */}
-      <div className="flex flex-col items-center scroll-py-5">
-        <h1 className="font-bold text-5xl pt-10 pb-5">my Blogs</h1>
-        <p className="px-20">
-          ここは日々の経験や感じたことを自由に書き留めることができます。このブログはあなたのプライベートな日記帳のようなものです。
-        </p>
-        <Link
-          href="/blog/create"
-          className=" px-4 py-2 border-2 bg-black text-white rounded-full"
-        >
-          new BLOG
-        </Link>
-        <div className="w-full space-y-4 flex flex-col items-center pb-10 mt-5">
-          {blogs.map((blog: BlogType) => (
-            <div
-              key={blog.id}
-              className="w-2/3 px-4 py-2 border rounded-lg border-gray-700"
-            >
-              <div className="flex justify-between">
-                <h1 className="font-bold text-xl">{blog.title}</h1>
-                <div className="space-x-2">
-                  <Link
-                    href={`/blog/edit/${blog.id}`}
-                    className="px-5 py-1 bg-black text-white rounded-full text-sm"
-                  >
-                    edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(blog)}
-                    className="px-3 py-1 bg-red-600 text-white rounded-full text-sm"
-                  >
-                    delete
-                  </button>
-                </div>
-              </div>
-              <h2 className="text-sm border-b-2">
-                
-              </h2>
+  const handleClick = async () => {
+    try {
+      await getIDmStr(navigator).then((id) => {
+        console.log("getIDmStr: " + id);
+        const trimmedId = id?.replace(/\s/g, ''); // 空白を削除
+        if(trimmedId){
+        setId(trimmedId);
+        }else{
+        setId("");
+        setUser([]);
+        }
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
-              <div className="p-4">{blog.content}</div>
-            </div>
-          ))}
+   // user が変更されるたびに fetchuser を呼び出す
+   useEffect(() => { 
+    const fetchuser = async () => {
+      try {
+        const res = await fetch(`/api/ticket/${ id }`);
+        const data = await res.json();
+        console.log(data.ticket);
+        if (data.ticket) {
+          setUser(data.ticket);
+        } else {
+          console.log('No user found.');
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    if (id) {
+      fetchuser();
+    }
+  }, [id]);
+
+  return (
+    <main>
+      <div className="flex flex-col justify-center items-center">
+        <h1 className="text-4xl">Search No.?</h1>
+        <div>
+          {/* input 要素に onChange イベントハンドラーを設定 */}
+          <input 
+            type="text" 
+            value={id} 
+            onChange={handleInputChange} 
+            style={{ width: "180px", border: "1px solid black", borderRadius: "4px", padding: "5px", marginBottom: "10px"}} 
+            className="text-black"
+          />
+        </div>
+        {/* Link コンポーネントでページ遷移を行い、入力された文字列を URL パラメーターとして渡す */}
+        <Link href={`/ticket/Check/${id}`}>OK</Link>
+        <Link href={`/ticket/Create`}>newUsere?</Link>
+        <Link href={`/`}>DeleteUsere?</Link>
+
+        <button
+          onClick={handleClick}
+          className="bg-white border-4 border-gray-500 rounded-full text-white px-2 py-2 hover:bg-white hover:text-black"
+        >
+          read IDm
+        </button>
+        <p className="pt-5">{id && `IDm: ${id}`}</p>
+      </div>
+      <div className="flex flex-col justify-center items-center">
+        <h1 className="text-4xl">Check User</h1>
+        <div>
+          {user && user.length > 0 ? (
+            user.map((userData, index) => (
+              <div key={index}>
+                <h1>Ticket Details</h1>
+                <p>Name: {userData.name}</p>
+                <p>Email: {userData.email}</p>
+              </div>
+            ))
+          ) : (
+            <p>No user found.</p>
+          )}
         </div>
       </div>
     </div>
